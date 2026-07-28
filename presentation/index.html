@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TIC//LINK — CS5700 Final Project</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
+<style>
+  :root {
+    --background: #0b0b0d;
+    --text: #f2f0ea;
+    --muted: #86868c;
+    --border: #2b2b30;
+    --accent: #e3a552;
+    --x-color: #7fa8c9;
+  }
+
+  * { box-sizing: border-box; }
+
+  .reveal {
+    font-family: system-ui, -apple-system, "SF Pro Text", Helvetica, Arial, sans-serif;
+    font-size: 34px;
+  }
+
+  .reveal, .reveal .slides {
+    background: var(--background);
+  }
+
+  .reveal .slides section {
+    background: var(--background);
+    text-align: left;
+    padding: 0 90px;
+  }
+
+  .reveal .slides section > * {
+    max-width: 1040px;
+  }
+
+  .reveal .slides section.center-slide {
+    text-align: center;
+  }
+
+  .reveal .slides section.center-slide > * {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .reveal h1 {
+    font-size: 2.3em;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.08;
+    margin: 0 0 0.1em;
+    text-transform: none;
+    color: var(--accent);
+  }
+
+  .reveal .slides section:not(.center-slide) h1 {
+    position: relative;
+    padding-top: 0.3em;
+  }
+
+  .reveal .slides section:not(.center-slide) h1::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 1px;
+    width: 46px;
+    height: 4px;
+    background: var(--accent);
+  }
+
+  .reveal h1 + * {
+    margin-top: 0.55em;
+  }
+
+  .reveal h2 {
+    font-size: 1.05em;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.4;
+    color: var(--muted);
+    margin: 0 0 0.6em;
+    text-transform: none;
+  }
+
+  .brand {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+
+  .lede {
+    font-size: 0.6em;
+    color: var(--text);
+    line-height: 1.6;
+    font-weight: 400;
+    max-width: 680px;
+  }
+
+  .reveal ul.points {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+  }
+
+  .points li {
+    font-size: 0.56em;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.45;
+  }
+
+  .points li.muted {
+    color: var(--muted);
+  }
+
+  .diagram-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 0.5em 0 0.6em;
+  }
+
+  .diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: nowrap;
+  }
+
+  .arrow-down {
+    font-size: 0.5em;
+    color: var(--muted);
+    line-height: 1;
+  }
+
+  .node {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 22px;
+    text-align: center;
+    min-width: 170px;
+  }
+
+  .node.accent {
+    border-color: var(--accent);
+  }
+
+  .node.accent .title {
+    color: var(--accent);
+  }
+
+  .node .title {
+    font-size: 0.44em;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .node .sub {
+    font-size: 0.32em;
+    color: var(--muted);
+    margin-top: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .arrow {
+    font-size: 0.5em;
+    color: var(--muted);
+  }
+
+  .caption {
+    font-size: 0.48em;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-top: 0.9em;
+    max-width: 680px;
+  }
+
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 56px;
+    margin-top: 0;
+  }
+
+  .stack h3 {
+    font-size: 0.4em;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.08em;
+    margin: 0 0 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  code, .code-inline {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9em;
+    color: var(--accent);
+  }
+
+  .board-hero {
+    display: grid;
+    grid-template-columns: repeat(3, 64px);
+    grid-template-rows: repeat(3, 64px);
+    gap: 8px;
+    justify-content: center;
+    margin: 0 auto 0.5em;
+  }
+
+  .board-hero div {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 800;
+  }
+
+  .board-hero .x { color: var(--x-color); }
+  .board-hero .o { color: var(--accent); }
+
+  .reveal .progress {
+    color: var(--accent);
+    height: 3px;
+  }
+
+  .reveal .controls {
+    color: var(--muted);
+  }
+
+  .reveal .slide-number {
+    color: var(--muted);
+    background: transparent;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal .slides section {
+      transition: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <section class="center-slide">
+      <div class="board-hero">
+        <div class="x">X</div><div></div><div class="o">O</div>
+        <div></div><div class="x">X</div><div></div>
+        <div class="o">O</div><div></div><div class="x">X</div>
+      </div>
+      <h1 class="brand" style="font-size:2.6em; color:var(--text);">TIC//LINK</h1>
+      <h2>Real-time multiplayer Tic-Tac-Toe</h2>
+      <p class="lede" style="margin:1.1em auto 0; color:var(--muted);">CS5700 Final Project — Add your name(s) here</p>
+    </section>
+
+    <section>
+      <h1>Introduction</h1>
+      <ul class="points">
+        <li>Two players, two browsers, one Tic-Tac-Toe board</li>
+        <li>A Next.js server holds the single copy of the game state</li>
+        <li>Demonstrates real-time client-server synchronization</li>
+      </ul>
+    </section>
+
+    <section>
+      <h1>System Features</h1>
+      <div class="stack">
+        <div>
+          <h3>Gameplay</h3>
+          <ul class="points">
+            <li>Turn-based moves, synced in real time</li>
+            <li>One shared board state</li>
+            <li>Win, loss, and draw tracking</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Networking</h3>
+          <ul class="points">
+            <li>Matchmaking and private room codes</li>
+            <li>In-game chat</li>
+            <li>Connection activity log</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h1>System Analysis &amp; Design</h1>
+      <div class="diagram-stack">
+        <div class="diagram">
+          <div class="node"><div class="title">Player X</div><div class="sub">browser</div></div>
+          <div class="arrow">⇄</div>
+          <div class="node accent"><div class="title">TIC//LINK server</div><div class="sub">Next.js routes</div></div>
+          <div class="arrow">⇄</div>
+          <div class="node"><div class="title">Player O</div><div class="sub">browser</div></div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="node"><div class="title">Shared room state</div><div class="sub">board · players · chat · activity</div></div>
+      </div>
+      <p class="caption">The server validates every move against the player's identity, the current turn, and the board state before applying it.</p>
+    </section>
+
+    <section>
+      <h1>Implementation &amp; Methodology</h1>
+      <div class="stack">
+        <div>
+          <h3>Stack</h3>
+          <ul class="points">
+            <li>Next.js route handlers for the API</li>
+            <li>React client, no external state library</li>
+            <li>One in-memory store for all rooms</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Synchronization</h3>
+          <ul class="points">
+            <li>Client requests <span class="code-inline">GET /api/rooms/:code</span> every 850ms</li>
+            <li>Server re-validates every move on arrival</li>
+            <li class="muted">Plain HTTP polling, no WebSocket connection</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h1>Testing &amp; User Manual</h1>
+      <div class="stack">
+        <div>
+          <h3>Automated</h3>
+          <ul class="points">
+            <li>Build and lint checks</li>
+            <li>Two-player integration test</li>
+            <li class="muted">Covers join, move, chat, win, and rematch</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Manual</h3>
+          <ul class="points">
+            <li><span class="code-inline">npm ci && npm run dev</span></li>
+            <li>Open two browser windows</li>
+            <li>Quick match, or share a room code</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h1>Improvements &amp; Future Work</h1>
+      <ul class="points">
+        <li>Persistent storage across server restarts</li>
+        <li>WebSocket-based sync instead of polling</li>
+        <li>Spectator mode and voice chat</li>
+        <li>Player accounts with saved stats</li>
+      </ul>
+    </section>
+
+    <section>
+      <h1>Conclusion</h1>
+      <p class="lede">TIC//LINK implements every required feature: matchmaking, synchronized moves, chat, win/loss/draw tracking, and a connection activity log. Game state lives in memory and resets when the server restarts — a deliberate simplification for this project's scope.</p>
+    </section>
+
+    <section>
+      <h1>Reflection</h1>
+      <ul class="points">
+        <li>What worked well</li>
+        <li>What we'd change</li>
+        <li>What we learned</li>
+        <li class="muted">Fill in with your team's actual takeaways before presenting</li>
+      </ul>
+    </section>
+
+    <section class="center-slide">
+      <h1 class="brand" style="font-size:2em;">Questions?</h1>
+      <p class="lede" style="margin:0 auto; color:var(--muted);">github.com/&lt;your-repo&gt;</p>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    controls: true,
+    progress: true,
+    center: true,
+    slideNumber: 'c/t',
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    width: 1280,
+    height: 720,
+    margin: 0.04,
+  });
+</script>
+</body>
+</html>
