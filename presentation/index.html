@@ -206,6 +206,42 @@
     color: var(--accent);
   }
 
+  table.data {
+    border-collapse: collapse;
+    font-size: 0.5em;
+    max-width: 720px;
+    width: 100%;
+  }
+
+  table.data th {
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 0 0 12px;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  table.data td {
+    border-top: 1px solid var(--border);
+    padding: 12px 0;
+  }
+
+  table.data th + th,
+  table.data td + td {
+    text-align: right;
+  }
+
+  table.data td + td {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  table.data tr.final td {
+    color: var(--accent);
+  }
+
   .board-hero {
     display: grid;
     grid-template-columns: repeat(3, 64px);
@@ -304,7 +340,7 @@
         <div class="diagram">
           <div class="node"><div class="title">Player X</div><div class="sub">browser</div></div>
           <div class="arrow">⇄</div>
-          <div class="node accent"><div class="title">TIC//LINK server</div><div class="sub">Next.js routes</div></div>
+          <div class="node accent"><div class="title">TIC//LINK server</div><div class="sub">POST in · SSE out</div></div>
           <div class="arrow">⇄</div>
           <div class="node"><div class="title">Player O</div><div class="sub">browser</div></div>
         </div>
@@ -328,31 +364,47 @@
         <div>
           <h3>Synchronization</h3>
           <ul class="points">
-            <li>Client requests <span class="code-inline">GET /api/rooms/:code</span> every 850ms</li>
+            <li>Actions sent by <span class="code-inline">POST</span>, state pushed over Server-Sent Events</li>
             <li>Server re-validates every move on arrival</li>
-            <li class="muted">Plain HTTP polling, no WebSocket connection</li>
+            <li class="muted">One open stream per player, no polling</li>
           </ul>
         </div>
       </div>
     </section>
 
     <section>
+      <h1>Transport Choice</h1>
+      <table class="data">
+        <thead>
+          <tr><th>Room state</th><th>Bytes per response</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Empty room</td><td>753</td></tr>
+          <tr><td>10 chat messages</td><td>3,496</td></tr>
+          <tr><td>Message cap reached</td><td>27,007</td></tr>
+          <tr class="final"><td>Sent while idle, after SSE</td><td>0</td></tr>
+        </tbody>
+      </table>
+      <p class="caption">Our first version polled that payload every 850 ms whether or not anything changed. Server-Sent Events send nothing until state changes; measured delivery is 39 ms. WebSocket was evaluated and rejected — traffic is almost entirely server-to-client, and <span class="code-inline">EventSource</span> reconnects on its own.</p>
+    </section>
+
+    <section>
       <h1>Testing &amp; User Manual</h1>
       <div class="stack">
         <div>
-          <h3>Automated</h3>
+          <h3>How we verified</h3>
           <ul class="points">
-            <li>Build and lint checks</li>
-            <li>Two-player integration test</li>
-            <li class="muted">Covers join, move, chat, win, and rematch</li>
+            <li>Two browsers side by side, full games played</li>
+            <li>Out-of-turn and taken-square moves rejected</li>
+            <li class="muted">Join, move, chat, win, draw, and rematch</li>
           </ul>
         </div>
         <div>
-          <h3>Manual</h3>
+          <h3>Run it</h3>
           <ul class="points">
             <li><span class="code-inline">npm ci && npm run dev</span></li>
             <li>Open two browser windows</li>
-            <li>Quick match, or share a room code</li>
+            <li>Find a match, or share a room code</li>
           </ul>
         </div>
       </div>
@@ -362,7 +414,7 @@
       <h1>Improvements &amp; Future Work</h1>
       <ul class="points">
         <li>Persistent storage across server restarts</li>
-        <li>WebSocket-based sync instead of polling</li>
+        <li>WebSockets, if the game ever needs a busy upward channel</li>
         <li>Spectator mode and voice chat</li>
         <li>Player accounts with saved stats</li>
       </ul>

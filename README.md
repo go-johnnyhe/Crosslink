@@ -13,13 +13,14 @@ TIC//LINK is a browser-based multiplayer Tic-Tac-Toe networking application buil
 - In-game text chat
 - Persistent wins, losses, draws, and games played
 - Two-player rematch voting
-- Room activity log and connection latency
+- Room activity log and live connection status
 - Responsive, keyboard-accessible interface
 
 ## Technology
 
 - Next.js, React, and TypeScript
 - Next.js route handlers for the game API
+- Server-Sent Events for pushing state to both players
 - One in-memory server store for rooms, players, chat, and activity
 - Plain CSS for the responsive interface
 
@@ -27,13 +28,16 @@ TIC//LINK is a browser-based multiplayer Tic-Tac-Toe networking application buil
 
 ```mermaid
 flowchart LR
-    A["Player X browser"] -->|"HTTP commands + state sync"| C["TIC//LINK server"]
-    B["Player O browser"] -->|"HTTP commands + state sync"| C
-    C -->|"Validates and updates"| D["Shared room state"]
-    D --> E["Board, players, scores, chat, activity"]
+    A["Player X browser"] -->|"POST actions"| C["TIC//LINK server"]
+    B["Player O browser"] -->|"POST actions"| C
+    C -->|"SSE snapshot on change"| A
+    C -->|"SSE snapshot on change"| B
+    C --> D["Shared room state"]
 ```
 
-The browser never decides whether a move is legal. Each move is sent to the local server and checked against the player identity, active turn, and current board. Both players retrieve the same authoritative room state every 850 milliseconds.
+The browser never decides whether a move is legal. Each action is sent to the server as an ordinary `POST` and checked against the player identity, active turn, and current board. The server then pushes one full room snapshot to both players over their open Server-Sent Events stream.
+
+Nothing is transmitted while a room is idle. An earlier version polled the full room state every 850 ms regardless of whether anything had changed, which cost between 753 bytes and 27 KB per request per player; snapshots are now sent only on a join, move, message, or rematch. Measured end-to-end delivery from one player's click to the other player's board is about 39 ms.
 
 ## Server state
 
@@ -49,7 +53,7 @@ The browser never decides whether a move is legal. Each move is sent to the loca
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/lobby` | Quick match, create a room, or join by code |
-| `GET` | `/api/rooms/:code` | Retrieve the synchronized room state |
+| `GET` | `/api/rooms/:code/stream` | Server-Sent Events stream of room snapshots |
 | `POST` | `/api/rooms/:code/move` | Validate and apply a move |
 | `POST` | `/api/rooms/:code/message` | Add an in-room chat message |
 | `POST` | `/api/rooms/:code/rematch` | Submit a rematch vote |
@@ -67,25 +71,20 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000` in two browser windows. Create a private room in the first window and join its code in the second, or select Quick Match in both.
+Open `http://localhost:3000` in two browser windows. Create a private room in the first window and join its code in the second, or choose Find a match in both.
 
 The game state is intentionally kept in memory and resets when the server stops. This keeps the project small and easy to explain.
 
-## Test
+## Verifying it works
 
-Run the build and source checks:
+Run two browser windows side by side and confirm:
 
-```bash
-npm test
-```
+- Both boards stay identical as moves are made, with no page reloads
+- A move out of turn, or onto a taken square, is rejected
+- Chat, win, loss, draw, and rematch all behave correctly
+- The status indicator reads **Live** while connected
 
-With the local server running, execute the full two-player integration test:
-
-```bash
-node --test tests/api.integration.mjs
-```
-
-The integration test verifies room creation, joining, synchronized moves, out-of-turn rejection, chat, a completed match, score updates, and a two-player rematch.
+`npm run lint` covers static checks.
 
 ## Presentation
 
@@ -104,9 +103,9 @@ Open `presentation/index.html` in a browser to run the reveal.js deck offline (a
 
 ```text
 app/
-  api/                  Server endpoints
-  GameClient.tsx        Lobby, board, chat, and telemetry interface
-  globals.css           Responsive visual design
-lib/game.ts             Shared game logic and in-memory room store
-tests/                  Build and multiplayer integration tests
+  api/                  Server endpoints, including the SSE stream
+  GameClient.tsx        Lobby, board, chat, and activity interface
+  globals.css           Visual design, shared palette with the slides
+lib/game.ts             Game logic, in-memory room store, and broadcast
+presentation/           reveal.js deck and speaker script
 ```

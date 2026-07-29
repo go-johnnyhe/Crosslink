@@ -1,4 +1,5 @@
 import {
+  broadcast,
   cleanCode,
   cleanName,
   createPlayer,
@@ -56,6 +57,10 @@ export async function POST(request: Request) {
     } else {
       room = createRoom(player);
     }
+
+    // Tells the waiting player their opponent arrived. A brand new room has no
+    // subscribers yet, so this is a no-op for "create".
+    broadcast(room);
 
     const mark = room.players.X.id === player.id ? "X" : "O";
     return Response.json(

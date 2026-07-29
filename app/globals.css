@@ -1,342 +1,482 @@
+/* TIC//LINK — shares its palette and type treatment with presentation/index.html
+   so the running app and the slides read as one system. */
+
 :root {
-  --background: #090c12;
-  --panel: #111722;
-  --border: #293240;
-  --text: #f3f1ea;
-  --muted: #8994a5;
-  --lime: #c9ff3d;
-  --cyan: #64e7ff;
-  --orange: #ff7040;
+  --bg: #0b0b0d;
+  --surface: #131316;
+  --surface-2: #191a1e;
+  --border: #26262b;
+  --border-strong: #34343a;
+  --text: #f2f0ea;
+  --muted: #8a8a91;
+  --accent: #e3a552;
+  --x: #7fa8c9;
+  --o: #e3a552;
+  --danger: #d9705f;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
-  background: var(--background);
+  background: var(--bg);
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 button,
 input {
   font: inherit;
+  color: inherit;
 }
 
 button {
   cursor: pointer;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-button:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--lime);
+:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.lobby,
-.game {
-  min-height: 100vh;
+/* Monospace details: room codes, labels, timestamps. */
+.brand-mark,
+.code,
+.label,
+time,
+.player small {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-.topbar {
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  height: 68px;
-  justify-content: space-between;
-  padding: 0 32px;
-}
-
-.topbar > strong {
-  color: var(--lime);
-  font-family: monospace;
+.brand-mark {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.08em;
 }
 
-.topbar span {
+.label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* --- Buttons --------------------------------------------------------------- */
+
+.btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  min-height: 44px;
+  padding: 0 16px;
+  transition: background 120ms ease, border-color 120ms ease,
+    transform 100ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: #202126;
+  border-color: #414149;
+}
+
+/* Feedback on press, not release. */
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn.primary {
+  background: var(--text);
+  border-color: var(--text);
+  color: #0b0b0d;
+  font-weight: 600;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: #fff;
+  border-color: #fff;
+}
+
+.btn.quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.btn.quiet:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.btn.wide {
+  width: 100%;
+}
+
+input {
+  background: #0e0e11;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  min-height: 44px;
+  padding: 0 14px;
+  width: 100%;
+}
+
+input::placeholder {
+  color: #5e5e66;
+}
+
+input:disabled {
+  opacity: 0.5;
+}
+
+/* --- Lobby ---------------------------------------------------------------- */
+
+.lobby {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.lobby-card {
+  max-width: 400px;
+  width: 100%;
+}
+
+.brand {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.brand p {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 10px 0 0;
+}
+
+.lobby-card form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  display: grid;
+  gap: 10px;
+  padding: 24px;
+}
+
+.lobby-card label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.lobby-card label + input {
+  margin-bottom: 6px;
+}
+
+.rule {
   align-items: center;
   color: var(--muted);
   display: flex;
-  font-family: monospace;
-  font-size: 11px;
+  font-size: 12px;
+  gap: 12px;
+  margin: 6px 0;
+}
+
+.rule::before,
+.rule::after {
+  background: var(--border-strong);
+  content: "";
+  flex: 1;
+  height: 1px;
+}
+
+.code-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr auto;
+}
+
+.code-row input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+/* --- Top bar -------------------------------------------------------------- */
+
+.topbar {
+  align-items: center;
+  background: rgba(11, 11, 13, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  height: 60px;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar-right {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.chip {
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  display: flex;
+  font-size: 12px;
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 12px;
+  transition: border-color 120ms ease;
+}
+
+.chip:hover {
+  border-color: #414149;
+}
+
+.chip .code {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.status-dot {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 12px;
   gap: 7px;
 }
 
-.topbar i {
-  background: var(--lime);
+.status-dot i {
   border-radius: 50%;
-  display: inline-block;
   height: 7px;
   width: 7px;
 }
 
-.lobby-content {
-  align-items: center;
+.status-dot.on i {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(227, 165, 82, 0.16);
+}
+
+.status-dot.off i {
+  background: #56565e;
+}
+
+/* --- Game layout ---------------------------------------------------------- */
+
+.layout {
   display: grid;
-  gap: 72px;
-  grid-template-columns: 1fr 400px;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: calc(100vh - 60px);
+}
+
+/* Sized so the heading, player cards and full board fit a 800px-tall viewport
+   without scrolling. */
+.play {
   margin: 0 auto;
-  max-width: 1120px;
-  min-height: calc(100vh - 68px);
-  padding: 48px 24px;
-}
-
-.intro h1 {
-  font-size: clamp(56px, 8vw, 100px);
-  letter-spacing: -0.06em;
-  line-height: 0.9;
-  margin: 18px 0 28px;
-}
-
-.intro > p:last-child {
-  color: var(--muted);
-  font-size: 18px;
-  line-height: 1.6;
-  max-width: 560px;
-}
-
-.eyebrow {
-  color: var(--lime);
-  font-family: monospace;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 0.12em;
-}
-
-.join-panel,
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-}
-
-.join-panel {
-  padding: 30px;
-}
-
-.join-panel h2,
-.panel h2 {
-  margin: 0;
-}
-
-.join-panel label {
-  color: var(--muted);
-  display: block;
-  font-size: 12px;
-  margin: 26px 0 18px;
-}
-
-.join-panel input,
-.chat input {
-  background: #090d14;
-  border: 1px solid var(--border);
-  color: var(--text);
-  height: 48px;
-  padding: 0 13px;
+  max-width: 452px;
+  padding: 28px 24px 32px;
   width: 100%;
 }
 
-.join-panel label input {
-  display: block;
-  margin-top: 8px;
-}
-
-.join-panel > button {
-  margin-bottom: 10px;
-  width: 100%;
-}
-
-.join-panel button,
-.chat button,
-.room-info button,
-.rematch {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  min-height: 44px;
-  padding: 0 14px;
-}
-
-.primary {
-  background: var(--lime) !important;
-  border-color: var(--lime) !important;
-  color: #080b10 !important;
-  font-weight: bold;
-}
-
-.join-code {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 1fr auto;
-  margin-top: 8px;
-}
-
-.join-code input {
-  text-transform: uppercase;
-}
-
-.join-panel small {
-  color: var(--muted);
-  display: block;
-  margin-top: 18px;
-  text-align: center;
-}
-
-.error {
-  color: #ff9d7c;
-  font-size: 13px;
-}
-
-.room-info {
-  align-items: center;
+.play-head {
+  align-items: flex-end;
   display: flex;
-  font-family: monospace;
-  font-size: 11px;
-  gap: 12px;
-}
-
-.room-info b {
-  color: var(--lime);
-  letter-spacing: 0.1em;
-}
-
-.room-info button {
-  min-height: 34px;
-}
-
-.game-layout {
-  display: grid;
-  grid-template-columns: minmax(520px, 1fr) 380px;
-  min-height: calc(100vh - 68px);
-}
-
-.play-area {
-  padding: 40px;
-}
-
-.game-heading,
-.players,
-.board,
-.notice,
-.rematch {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 600px;
-}
-
-.game-heading {
-  align-items: end;
-  display: flex;
+  gap: 16px;
   justify-content: space-between;
+  margin-bottom: 24px;
 }
 
-.game-heading h1 {
-  font-size: 42px;
-  margin: 8px 0 0;
+.play-head h1 {
+  font-size: 28px;
+  margin-top: 6px;
 }
 
-.mark-badge {
+.you {
   border: 1px solid currentColor;
-  font-family: monospace;
-  font-size: 11px;
-  padding: 9px 11px;
+  border-radius: 999px;
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
 }
 
 .mark-x {
-  color: var(--cyan);
+  color: var(--x);
 }
 
 .mark-o {
-  color: var(--orange);
+  color: var(--o);
 }
 
 .players {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   grid-template-columns: 1fr 1fr;
-  margin-bottom: 18px;
-  margin-top: 28px;
+  margin-bottom: 16px;
 }
 
-.players > div {
+.player {
   align-items: center;
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--border);
-  display: grid;
+  border-radius: var(--r-md);
+  display: flex;
   gap: 12px;
-  grid-template-columns: 32px 1fr auto;
-  min-height: 60px;
-  padding: 10px 14px;
+  padding: 12px 14px;
+  transition: border-color 160ms ease;
 }
 
-.players > div.active {
-  border-color: var(--lime);
+.player.active {
+  border-color: var(--accent);
 }
 
-.players b {
-  font-size: 24px;
+.player b {
+  font-size: 20px;
+  line-height: 1;
 }
 
-.players small {
+.player span {
+  display: block;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player small {
   color: var(--muted);
-  font-family: monospace;
-  font-size: 9px;
+  font-size: 10px;
 }
 
+/* Rows must be explicit; without them an empty row collapses shorter than one
+   holding a mark. */
 .board {
   aspect-ratio: 1;
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
 }
 
 .board button {
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--border);
-  font-size: clamp(52px, 8vw, 88px);
-  font-weight: bold;
+  border-radius: var(--r-md);
+  font-size: clamp(40px, 11vw, 64px);
+  font-weight: 600;
+  transition: background 120ms ease, border-color 120ms ease,
+    transform 100ms ease;
 }
 
 .board button:not(:disabled):hover {
-  border-color: var(--lime);
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.board button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.board button:disabled {
+  cursor: default;
 }
 
 .notice {
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: var(--r-md);
   color: var(--muted);
-  margin-top: 18px;
-  padding: 16px;
+  font-size: 14px;
+  margin: 16px 0 0;
+  padding: 14px;
   text-align: center;
 }
 
 .notice b {
-  color: var(--lime);
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.14em;
 }
 
-.rematch {
-  display: block;
-  margin-top: 18px;
-  width: 100%;
+.play .btn.wide {
+  margin-top: 16px;
 }
 
+/* --- Sidebar -------------------------------------------------------------- */
+
+/* Pinned so the chat composer and activity log stay in view while the board
+   column scrolls on shorter screens. */
 aside {
-  background: #0c1119;
   border-left: 1px solid var(--border);
   display: grid;
-  grid-template-rows: minmax(430px, 1fr) auto;
-  padding: 20px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: calc(100vh - 60px);
+  min-height: 0;
+  overflow: hidden;
+  position: sticky;
+  top: 60px;
 }
 
 .panel {
   min-height: 0;
   padding: 20px;
+}
+
+.panel h2 {
+  font-size: 13px;
+  letter-spacing: 0;
+  margin-bottom: 14px;
 }
 
 .chat {
@@ -345,144 +485,154 @@ aside {
 }
 
 .messages {
+  display: grid;
+  gap: 12px;
   flex: 1;
-  margin: 18px -5px;
+  margin: 0 -4px 14px;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 5px;
+  padding: 0 4px;
+  align-content: start;
 }
 
-.messages > div {
-  margin-bottom: 14px;
-}
-
-.messages small {
+.bubble small {
+  align-items: center;
   color: var(--muted);
-  font-family: monospace;
-  font-size: 9px;
+  display: flex;
+  font-size: 11px;
+  gap: 8px;
+  margin-bottom: 5px;
 }
 
-.messages p {
-  background: #19212c;
+.bubble time {
+  font-size: 10px;
+}
+
+.bubble p {
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  font-size: 13px;
-  line-height: 1.4;
-  margin: 5px 0 0;
-  padding: 10px;
+  border-radius: var(--r-md);
+  border-top-left-radius: 4px;
+  font-size: 14px;
+  margin: 0;
+  padding: 9px 12px;
+  overflow-wrap: anywhere;
 }
 
-.messages .mine p {
-  border-color: #31515b;
+.bubble.mine p {
+  background: #1d2530;
+  border-color: #2c3947;
+  border-top-left-radius: var(--r-md);
+  border-top-right-radius: 4px;
 }
 
 .chat form {
   display: grid;
+  gap: 8px;
   grid-template-columns: 1fr auto;
 }
 
-.chat form input {
-  border-right: 0;
-}
-
-.chat form button {
-  min-height: 48px;
-}
-
 .empty {
-  color: var(--muted);
+  color: #5e5e66;
   font-size: 13px;
+  margin: 0;
 }
 
 .activity {
-  border-top: 0;
-  max-height: 270px;
+  border-top: 1px solid var(--border);
+  max-height: 226px;
   overflow-y: auto;
 }
 
-.activity h2 {
-  font-size: 16px;
-  margin-bottom: 14px;
+.activity > div {
+  align-items: baseline;
+  display: flex;
+  font-size: 12.5px;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 7px 0;
 }
 
-.activity > div {
-  align-items: center;
+.activity > div + div {
   border-top: 1px solid var(--border);
-  display: flex;
-  font-size: 11px;
-  justify-content: space-between;
-  padding: 9px 0;
 }
 
 .activity time {
   color: var(--muted);
-  font-family: monospace;
-  font-size: 9px;
+  flex: none;
+  font-size: 10px;
 }
+
+/* --- Toast ---------------------------------------------------------------- */
 
 .toast {
-  background: #3b1d15;
-  border: 1px solid var(--orange);
+  align-items: center;
+  background: #2a1a17;
+  border: 1px solid #5c3a33;
+  border-radius: var(--r-md);
   bottom: 20px;
   color: var(--text);
+  display: flex;
+  font-size: 14px;
+  gap: 14px;
   left: 50%;
-  padding: 12px 18px;
+  padding: 12px 16px;
   position: fixed;
   transform: translateX(-50%);
+  z-index: 20;
 }
 
-@media (max-width: 850px) {
-  .lobby-content {
-    gap: 40px;
-    grid-template-columns: 1fr;
-  }
+.toast span {
+  color: var(--muted);
+}
 
-  .game-layout {
+/* --- Responsive ----------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .layout {
     grid-template-columns: 1fr;
   }
 
   aside {
     border-left: 0;
     border-top: 1px solid var(--border);
-    grid-template-rows: 500px auto;
+    grid-template-rows: 420px auto;
+    height: auto;
+    overflow: visible;
+    position: static;
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 520px) {
   .topbar {
-    height: auto;
-    min-height: 62px;
-    padding: 12px 16px;
+    padding: 0 14px;
   }
 
-  .topbar > span,
-  .room-info span,
-  .room-info > button:first-of-type {
+  .topbar .brand-mark,
+  .status-dot {
     display: none;
   }
 
-  .room-info {
-    gap: 7px;
+  .play {
+    padding: 24px 16px 32px;
   }
 
-  .play-area {
-    padding: 28px 16px;
-  }
-
-  .game-heading h1 {
-    font-size: 30px;
-  }
-
-  .players > div {
-    gap: 7px;
-    grid-template-columns: 25px 1fr;
-    padding: 8px;
-  }
-
-  .players small {
-    display: none;
+  .play-head h1 {
+    font-size: 23px;
   }
 
   .board {
-    gap: 5px;
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+
+  .btn:active:not(:disabled),
+  .board button:not(:disabled):active {
+    transform: none;
   }
 }

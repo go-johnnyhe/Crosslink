@@ -1,5 +1,6 @@
 import {
   addActivity,
+  broadcast,
   cleanCode,
   gameError,
   getRoom,
@@ -42,6 +43,8 @@ export async function POST(request: Request, context: RouteContext) {
       room.round += 1;
       addActivity(room, "round_started", `Round ${room.round} started`);
     }
+
+    broadcast(room);
 
     return Response.json({ ok: true });
   } catch (error) {

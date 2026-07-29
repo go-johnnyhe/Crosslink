@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 type Mark = "X" | "O";
 
@@ -76,7 +76,8 @@ export function GameClient() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [latency, setLatency] = useState<number | null>(null);
+  const [live, setLive] = useState(false);
+  const [copied, setCopied] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -91,28 +92,38 @@ export function GameClient() {
     }
   }, []);
 
-  const syncGame = useCallback(async () => {
-    if (!session) return;
-    const started = performance.now();
-    try {
-      const data = await request<GameState>(
-        `/api/rooms/${session.roomCode}?player=${session.playerId}`,
-      );
-      setGame(data);
-      setLatency(Math.round(performance.now() - started));
-    } catch {
-      // Keep the current board visible during a temporary connection failure.
-    }
-  }, [session]);
-
+  // One long-lived Server-Sent Events stream per session. The server pushes a
+  // full room snapshot on connect and then only when something changes.
   useEffect(() => {
     if (!session) return;
-    // Start the first network sync as soon as a session becomes available.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void syncGame();
-    const timer = window.setInterval(syncGame, 850);
-    return () => window.clearInterval(timer);
-  }, [session, syncGame]);
+
+    const stream = new EventSource(
+      `/api/rooms/${session.roomCode}/stream?player=${session.playerId}`,
+    );
+    let received = false;
+
+    stream.onmessage = (event) => {
+      received = true;
+      setGame(JSON.parse(event.data) as GameState);
+      setLive(true);
+    };
+
+    stream.onerror = () => {
+      setLive(false);
+      // Never connected means the room is gone (usually a server restart), so
+      // stop retrying and send the player back to the lobby. After a first
+      // successful message, let EventSource reconnect on its own.
+      if (!received) {
+        stream.close();
+        sessionStorage.removeItem(SESSION_KEY);
+        setSession(null);
+        setGame(null);
+        setError("That room is no longer available.");
+      }
+    };
+
+    return () => stream.close();
+  }, [session]);
 
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: "smooth" });
@@ -135,6 +146,7 @@ export function GameClient() {
     }
   }
 
+  // Actions only send. The resulting state arrives back over the stream.
   async function play(index: number) {
     if (!session) return;
     setBusy(true);
@@ -144,7 +156,6 @@ export function GameClient() {
         method: "POST",
         body: JSON.stringify({ playerId: session.playerId, index }),
       });
-      await syncGame();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Move failed.");
     } finally {
@@ -162,7 +173,6 @@ export function GameClient() {
         method: "POST",
         body: JSON.stringify({ playerId: session.playerId, body: text }),
       });
-      await syncGame();
     } catch (err) {
       setMessage(text);
       setError(err instanceof Error ? err.message : "Message failed.");
@@ -177,7 +187,6 @@ export function GameClient() {
         method: "POST",
         body: JSON.stringify({ playerId: session.playerId }),
       });
-      await syncGame();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Rematch failed.");
     } finally {
@@ -185,71 +194,85 @@ export function GameClient() {
     }
   }
 
+  function copyCode() {
+    if (!session) return;
+    void navigator.clipboard.writeText(session.roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
   function leave() {
     sessionStorage.removeItem(SESSION_KEY);
     setSession(null);
     setGame(null);
     setError("");
+    setLive(false);
   }
 
   if (!session) {
     return (
       <main className="lobby">
-        <header className="topbar">
-          <strong>TIC//LINK</strong>
-          <span><i /> NETWORK ONLINE</span>
-        </header>
-
-        <section className="lobby-content">
-          <div className="intro">
-            <p className="eyebrow">REAL-TIME MULTIPLAYER</p>
-            <h1>OWN THE GRID.</h1>
-            <p>
-              Play synchronized Tic-Tac-Toe with a friend or match with the next
-              available player.
-            </p>
+        <div className="lobby-card">
+          <div className="brand">
+            <span className="brand-mark">TIC//LINK</span>
+            <p>Real-time multiplayer tic-tac-toe</p>
           </div>
 
           <form
-            className="join-panel"
             onSubmit={(event) => {
               event.preventDefault();
               void join("quick");
             }}
           >
-            <h2>Join a game</h2>
-            <label>
-              Display name
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Your name"
-                maxLength={20}
-                required
-              />
-            </label>
-            <button className="primary" type="submit" disabled={busy}>
-              Quick match
+            <label htmlFor="display-name">Display name</label>
+            <input
+              id="display-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Your name"
+              maxLength={20}
+              autoComplete="off"
+              required
+            />
+
+            <button className="btn primary" type="submit" disabled={busy}>
+              Find a match
             </button>
-            <button type="button" onClick={() => join("create")} disabled={busy}>
-              Create private room
+            <button
+              className="btn"
+              type="button"
+              onClick={() => join("create")}
+              disabled={busy}
+            >
+              Create a private room
             </button>
-            <div className="join-code">
+
+            <div className="rule"><span>or join with a code</span></div>
+
+            <div className="code-row">
               <input
                 value={roomCode}
-                onChange={(event) => setRoomCode(event.target.value.toUpperCase())}
-                placeholder="Room code"
+                onChange={(event) =>
+                  setRoomCode(event.target.value.toUpperCase())
+                }
+                placeholder="ABC123"
                 maxLength={6}
+                autoComplete="off"
                 aria-label="Room code"
               />
-              <button type="button" onClick={() => join("join")} disabled={busy}>
+              <button
+                className="btn"
+                type="button"
+                onClick={() => join("join")}
+                disabled={busy}
+              >
                 Join
               </button>
             </div>
-            {error && <p className="error">{error}</p>}
-            <small>No account required.</small>
+
+            {error && <p className="error" role="alert">{error}</p>}
           </form>
-        </section>
+        </div>
       </main>
     );
   }
@@ -261,8 +284,8 @@ export function GameClient() {
     game?.room.status === "playing" && game.room.currentMark === yourMark;
   const voted = game?.room.rematch[yourMark];
 
-  let status = "Connecting…";
-  if (game?.room.status === "waiting") status = "Waiting for another player";
+  let status = "Connecting";
+  if (game?.room.status === "waiting") status = "Waiting for an opponent";
   if (game?.room.status === "playing") {
     status = yourTurn ? "Your turn" : `${opponent?.name || "Opponent"}'s turn`;
   }
@@ -271,62 +294,74 @@ export function GameClient() {
       game.room.winner === "draw"
         ? "Draw"
         : game.room.winner === yourMark
-          ? "You won!"
+          ? "You won"
           : `${opponent?.name || "Opponent"} won`;
   }
 
   return (
     <main className="game">
       <header className="topbar">
-        <strong>TIC//LINK</strong>
-        <div className="room-info">
-          Room <b>{session.roomCode}</b>
-          <button
-            type="button"
-            onClick={() => navigator.clipboard.writeText(session.roomCode)}
-          >
-            Copy
+        <span className="brand-mark">TIC//LINK</span>
+        <div className="topbar-right">
+          <button className="chip" type="button" onClick={copyCode}>
+            <span className="code">{session.roomCode}</span>
+            {copied ? "Copied" : "Copy"}
           </button>
-          <span><i /> {latency ?? "—"} ms</span>
-          <button type="button" onClick={leave}>Exit</button>
+          <span className={`status-dot ${live ? "on" : "off"}`}>
+            <i />
+            {live ? "Live" : "Reconnecting"}
+          </span>
+          <button className="btn quiet" type="button" onClick={leave}>
+            Leave
+          </button>
         </div>
       </header>
 
-      <div className="game-layout">
-        <section className="play-area">
-          <div className="game-heading">
+      <div className="layout">
+        <section className="play">
+          <div className="play-head">
             <div>
-              <p className="eyebrow">ROUND {game?.room.round || 1}</p>
+              <p className="label">Round {game?.room.round || 1}</p>
               <h1>{status}</h1>
             </div>
-            <span className={`mark-badge mark-${yourMark.toLowerCase()}`}>
-              YOU ARE {yourMark}
+            <span className={`you mark-${yourMark.toLowerCase()}`}>
+              You are {yourMark}
             </span>
           </div>
 
           <div className="players">
             {(["X", "O"] as Mark[]).map((mark) => {
               const player = game?.room.players[mark];
+              const active =
+                game?.room.status === "playing" &&
+                game.room.currentMark === mark;
               return (
-                <div className={game?.room.currentMark === mark ? "active" : ""} key={mark}>
+                <div className={`player ${active ? "active" : ""}`} key={mark}>
                   <b className={`mark-${mark.toLowerCase()}`}>{mark}</b>
-                  <span>{player?.name || "Waiting…"}</span>
-                  <small>{player ? `${player.wins}W ${player.losses}L ${player.draws}D` : "—"}</small>
+                  <div>
+                    <span>{player?.name || "Waiting"}</span>
+                    <small>
+                      {player
+                        ? `${player.wins}W · ${player.losses}L · ${player.draws}D`
+                        : "—"}
+                    </small>
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="board" role="grid" aria-label="Tic-Tac-Toe board">
+          <div className="board" role="group" aria-label="Tic-tac-toe board">
             {(game?.room.board || Array(9).fill("")).map((cell, index) => (
               <button
                 type="button"
-                role="gridcell"
                 key={index}
                 className={cell ? `mark-${cell.toLowerCase()}` : ""}
                 disabled={!yourTurn || Boolean(cell) || busy}
                 onClick={() => play(index)}
-                aria-label={cell || `Play square ${index + 1}`}
+                aria-label={
+                  cell ? `Square ${index + 1}, ${cell}` : `Play square ${index + 1}`
+                }
               >
                 {cell}
               </button>
@@ -335,25 +370,38 @@ export function GameClient() {
 
           {game?.room.status === "waiting" && (
             <p className="notice">
-              Share room code <b>{session.roomCode}</b> with the second player.
+              Share code <b>{session.roomCode}</b> to invite your opponent.
             </p>
           )}
 
           {game?.room.status === "finished" && (
-            <button className="primary rematch" onClick={rematch} disabled={busy || voted}>
-              {voted ? "Waiting for opponent…" : "Play again"}
+            <button
+              className="btn primary wide"
+              type="button"
+              onClick={rematch}
+              disabled={busy || voted}
+            >
+              {voted ? "Waiting for opponent" : "Play again"}
             </button>
           )}
         </section>
 
         <aside>
           <section className="panel chat">
-            <h2>Game chat</h2>
+            <h2>Chat</h2>
             <div className="messages">
               {!game?.messages.length && <p className="empty">No messages yet.</p>}
               {game?.messages.map((item) => (
-                <div className={item.player_id === session.playerId ? "mine" : ""} key={item.id}>
-                  <small>{item.player_id === session.playerId ? "You" : item.sender_name} · {formatTime(item.created_at)}</small>
+                <div
+                  className={`bubble ${item.player_id === session.playerId ? "mine" : ""}`}
+                  key={item.id}
+                >
+                  <small>
+                    {item.player_id === session.playerId
+                      ? "You"
+                      : item.sender_name}
+                    <time>{formatTime(item.created_at)}</time>
+                  </small>
                   <p>{item.body}</p>
                 </div>
               ))}
@@ -363,18 +411,25 @@ export function GameClient() {
               <input
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
-                placeholder="Type a message"
+                placeholder={opponent ? "Message" : "Waiting for opponent"}
                 maxLength={280}
+                autoComplete="off"
                 disabled={!opponent}
               />
-              <button type="submit" disabled={!message.trim() || !opponent}>Send</button>
+              <button
+                className="btn"
+                type="submit"
+                disabled={!message.trim() || !opponent}
+              >
+                Send
+              </button>
             </form>
           </section>
 
           <section className="panel activity">
             <h2>Connection activity</h2>
             {!game?.activity.length && <p className="empty">No activity yet.</p>}
-            {game?.activity.slice(0, 6).map((item) => (
+            {game?.activity.slice(0, 5).map((item) => (
               <div key={item.id}>
                 <span>{item.detail}</span>
                 <time>{formatTime(item.created_at)}</time>
@@ -384,7 +439,12 @@ export function GameClient() {
         </aside>
       </div>
 
-      {error && <button className="toast" onClick={() => setError("")}>{error} ×</button>}
+      {error && (
+        <button className="toast" type="button" onClick={() => setError("")}>
+          {error}
+          <span aria-hidden="true">×</span>
+        </button>
+      )}
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import {
   addActivity,
   addMessage,
+  broadcast,
   cleanCode,
   gameError,
   getRoom,
@@ -40,6 +41,7 @@ export async function POST(request: Request, context: RouteContext) {
     const player = room.players[mark]!;
     addMessage(room, player, body);
     addActivity(room, "message", `${player.name} sent a message`);
+    broadcast(room);
     return Response.json({ ok: true }, { status: 201 });
   } catch (error) {
     return gameError(error);

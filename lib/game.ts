@@ -173,6 +173,59 @@ export function getWinner(board: Cell[]): Mark | "draw" | null {
   return board.every(Boolean) ? "draw" : null;
 }
 
+// --- Live updates -----------------------------------------------------------
+// Every open Server-Sent Events stream registers a listener for its room. When
+// a route mutates a room it calls broadcast(), which pushes one snapshot to
+// both players. Nothing is sent while a room is idle.
+
+type Listener = (payload: string) => void;
+
+const listenerGlobal = globalThis as typeof globalThis & {
+  ticLinkListeners?: Map<string, Set<Listener>>;
+};
+
+const listeners =
+  listenerGlobal.ticLinkListeners ??
+  (listenerGlobal.ticLinkListeners = new Map<string, Set<Listener>>());
+
+// The snapshot both players receive. Identical for everyone in the room, so it
+// is serialized once per broadcast.
+export function roomView(room: Room) {
+  return {
+    room: {
+      code: room.code,
+      status: room.status,
+      board: room.board,
+      currentMark: room.currentMark,
+      winner: room.winner,
+      round: room.round,
+      rematch: room.rematch,
+      players: room.players,
+    },
+    messages: room.messages,
+    activity: room.activity,
+  };
+}
+
+export function subscribe(code: string, listener: Listener) {
+  const room = listeners.get(code) ?? new Set<Listener>();
+  room.add(listener);
+  listeners.set(code, room);
+
+  return () => {
+    room.delete(listener);
+    if (room.size === 0) listeners.delete(code);
+  };
+}
+
+export function broadcast(room: Room) {
+  const subscribers = listeners.get(room.code);
+  if (!subscribers?.size) return;
+
+  const payload = JSON.stringify(roomView(room));
+  for (const listener of subscribers) listener(payload);
+}
+
 export function gameError(error: unknown) {
   console.error(error);
   return Response.json({ error: "Unexpected server error." }, { status: 500 });

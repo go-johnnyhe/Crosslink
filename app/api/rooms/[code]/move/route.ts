@@ -1,5 +1,6 @@
 import {
   addActivity,
+  broadcast,
   cleanCode,
   gameError,
   getRoom,
@@ -71,6 +72,8 @@ export async function POST(request: Request, context: RouteContext) {
           ? `${mark} won round ${room.round}`
           : `${mark} claimed square ${index! + 1}`,
     );
+
+    broadcast(room);
 
     return Response.json({
       ok: true,
