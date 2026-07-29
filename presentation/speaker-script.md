@@ -4,7 +4,9 @@ Johnny He and Yiwen Hu · CS5700 Final Project
 
 Target: 7:00 total, with about 3:00 of Q&A after. Times are cumulative. If you are past the mark, skip ahead rather than rushing the current slide.
 
-Before presenting: edit `index.html` to add the GitHub link on the last slide, and fill in your own answers on the Reflection slide.
+Before presenting: fill in your own answers on the Reflection slide in `index.html`.
+
+Repository: https://github.com/go-johnnyhe/Crosslink
 
 ---
 

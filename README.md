@@ -2,8 +2,6 @@
 
 Crosslink is a browser-based multiplayer Tic-Tac-Toe networking application built for the CS5700 final project. Two players can enter the same network room, receive synchronized game state, exchange messages, track results, inspect connection activity, and request rematches.
 
-![Crosslink social preview](public/og.png)
-
 ## Features
 
 - Automatic quick matchmaking
