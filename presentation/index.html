@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TIC//LINK — CS5700 Final Project</title>
+<title>Crosslink · CS5700 Final Project</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
 <style>
@@ -298,9 +298,9 @@
         <div></div><div class="x">X</div><div></div>
         <div class="o">O</div><div></div><div class="x">X</div>
       </div>
-      <h1 class="brand" style="font-size:2.6em; color:var(--text);">TIC//LINK</h1>
+      <h1 class="brand" style="font-size:2.6em; color:var(--text);">CROSSLINK</h1>
       <h2>Real-time multiplayer Tic-Tac-Toe</h2>
-      <p class="lede" style="margin:1.1em auto 0; color:var(--muted);">CS5700 Final Project — Add your name(s) here</p>
+      <p class="lede" style="margin:1.1em auto 0; color:var(--muted);">Johnny He and Yiwen Hu · CS5700 Final Project</p>
     </section>
 
     <section>
@@ -340,7 +340,7 @@
         <div class="diagram">
           <div class="node"><div class="title">Player X</div><div class="sub">browser</div></div>
           <div class="arrow">⇄</div>
-          <div class="node accent"><div class="title">TIC//LINK server</div><div class="sub">POST in · SSE out</div></div>
+          <div class="node accent"><div class="title">Crosslink server</div><div class="sub">POST in · SSE out</div></div>
           <div class="arrow">⇄</div>
           <div class="node"><div class="title">Player O</div><div class="sub">browser</div></div>
         </div>
@@ -385,7 +385,7 @@
           <tr class="final"><td>Sent while idle, after SSE</td><td>0</td></tr>
         </tbody>
       </table>
-      <p class="caption">Our first version polled that payload every 850 ms whether or not anything changed. Server-Sent Events send nothing until state changes; measured delivery is 39 ms. WebSocket was evaluated and rejected — traffic is almost entirely server-to-client, and <span class="code-inline">EventSource</span> reconnects on its own.</p>
+      <p class="caption">Our first version polled that payload every 850 ms whether or not anything changed. Server-Sent Events send nothing until state changes, and measured delivery is 39 ms. We evaluated WebSocket and rejected it: traffic is almost entirely server-to-client, and <span class="code-inline">EventSource</span> reconnects on its own.</p>
     </section>
 
     <section>
@@ -422,7 +422,7 @@
 
     <section>
       <h1>Conclusion</h1>
-      <p class="lede">TIC//LINK implements every required feature: matchmaking, synchronized moves, chat, win/loss/draw tracking, and a connection activity log. Game state lives in memory and resets when the server restarts — a deliberate simplification for this project's scope.</p>
+      <p class="lede">Crosslink implements every required feature: matchmaking, synchronized moves, chat, win/loss/draw tracking, and a connection activity log. Game state lives in memory and resets when the server restarts, a deliberate simplification for this project's scope.</p>
     </section>
 
     <section>

@@ -1,8 +1,8 @@
-# TIC//LINK
+# Crosslink
 
-TIC//LINK is a browser-based multiplayer Tic-Tac-Toe networking application built for the CS5700 final project. Two players can enter the same network room, receive synchronized game state, exchange messages, track results, inspect connection activity, and request rematches.
+Crosslink is a browser-based multiplayer Tic-Tac-Toe networking application built for the CS5700 final project. Two players can enter the same network room, receive synchronized game state, exchange messages, track results, inspect connection activity, and request rematches.
 
-![TIC//LINK social preview](public/og.png)
+![Crosslink social preview](public/og.png)
 
 ## Features
 
@@ -28,7 +28,7 @@ TIC//LINK is a browser-based multiplayer Tic-Tac-Toe networking application buil
 
 ```mermaid
 flowchart LR
-    A["Player X browser"] -->|"POST actions"| C["TIC//LINK server"]
+    A["Player X browser"] -->|"POST actions"| C["Crosslink server"]
     B["Player O browser"] -->|"POST actions"| C
     C -->|"SSE snapshot on change"| A
     C -->|"SSE snapshot on change"| B

@@ -49,7 +49,7 @@ type GameState = {
   activity: Activity[];
 };
 
-const SESSION_KEY = "tic-link-session";
+const SESSION_KEY = "crosslink-session";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -214,7 +214,7 @@ export function GameClient() {
       <main className="lobby">
         <div className="lobby-card">
           <div className="brand">
-            <span className="brand-mark">TIC//LINK</span>
+            <span className="brand-mark">CROSSLINK</span>
             <p>Real-time multiplayer tic-tac-toe</p>
           </div>
 
@@ -301,7 +301,7 @@ export function GameClient() {
   return (
     <main className="game">
       <header className="topbar">
-        <span className="brand-mark">TIC//LINK</span>
+        <span className="brand-mark">CROSSLINK</span>
         <div className="topbar-right">
           <button className="chip" type="button" onClick={copyCode}>
             <span className="code">{session.roomCode}</span>
