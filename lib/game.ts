@@ -1,5 +1,13 @@
+import { appendFileSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+
 export type Mark = "X" | "O";
 export type Cell = Mark | "";
+
+export type NetworkInfo = {
+  address: string;
+  edge: string;
+};
 
 export type Player = {
   id: string;
@@ -8,6 +16,7 @@ export type Player = {
   losses: number;
   draws: number;
   games_played: number;
+  network: NetworkInfo;
 };
 
 export type Message = {
@@ -48,6 +57,9 @@ const appGlobal = globalThis as typeof globalThis & {
   ticLinkStore?: GameStore;
 };
 
+const activityLogPath =
+  process.env.ACTIVITY_LOG_PATH ?? join(process.cwd(), "data", "activity.jsonl");
+
 // globalThis keeps the same store when Next.js reloads route modules in development.
 export const store =
   appGlobal.ticLinkStore ??
@@ -69,7 +81,23 @@ export function cleanCode(value: unknown) {
     : "";
 }
 
-export function createPlayer(name: string): Player {
+export function networkInfo(request: Request): NetworkInfo {
+  const address = request.headers.get("cf-connecting-ip") ?? "direct";
+  const parts = address.split(".");
+  const maskedAddress =
+    parts.length === 4
+      ? `${parts[0]}.${parts[1]}.x.x`
+      : address.includes(":")
+        ? `${address.split(":").slice(0, 3).join(":")}::/48`
+        : "direct";
+
+  return {
+    address: maskedAddress,
+    edge: request.headers.get("cf-ray")?.split("-").at(-1) ?? "local",
+  };
+}
+
+export function createPlayer(name: string, network: NetworkInfo): Player {
   return {
     id: crypto.randomUUID(),
     name,
@@ -77,6 +105,7 @@ export function createPlayer(name: string): Player {
     losses: 0,
     draws: 0,
     games_played: 0,
+    network,
   };
 }
 
@@ -133,13 +162,26 @@ export function playerMark(room: Room, playerId: string): Mark | null {
 }
 
 export function addActivity(room: Room, eventType: string, detail: string) {
-  room.activity.unshift({
+  const activity = {
     id: store.nextId++,
     event_type: eventType,
     detail,
     created_at: timestamp(),
-  });
+  };
+
+  room.activity.unshift(activity);
   room.activity = room.activity.slice(0, 20);
+
+  mkdirSync(dirname(activityLogPath), { recursive: true });
+  appendFileSync(
+    activityLogPath,
+    `${JSON.stringify({
+      created_at: activity.created_at,
+      room_code: room.code,
+      event_type: activity.event_type,
+      detail: activity.detail,
+    })}\n`,
+  );
 }
 
 export function addMessage(room: Room, player: Player, body: string) {

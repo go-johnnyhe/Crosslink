@@ -10,7 +10,7 @@ Player actions go to Next.js route handlers as `POST` requests. The browser asks
 
 The source of truth is the in-memory store in `lib/game.ts`. It is a `Map` keyed by the six-character room code. Each value contains one room's board, players, turn, score, chat messages, activity history, and rematch votes. Because every room has a different key, one server can run many separate games at the same time.
 
-Each player also keeps one Server-Sent Events connection open. After the server changes a room, it sends the same full room snapshot to both players. React saves that snapshot in state and renders it. The browser automatically reconnects after a temporary connection loss. If the server restarts, however, the rooms are gone because the store is not a database.
+Each player also keeps one HTTP event stream open. After the server changes a room, it sends the same full room snapshot to both players. React saves that snapshot in state and renders it. The client automatically reconnects after a temporary connection loss. If the server restarts, however, the rooms are gone because the store is not a database.
 
 ![Crosslink server data model](public/architecture-class-diagram.png)
 
@@ -23,16 +23,16 @@ The diagram is a UML-style view of the data model. The TypeScript code uses type
 - Server-authoritative turns and move validation
 - Sub-second board synchronization
 - In-game text chat
-- Persistent wins, losses, draws, and games played
+- Wins, losses, draws, and games played for the current server session
 - Two-player rematch voting
-- Room activity log and live connection status
+- Room activity dashboard, persistent server log, and live connection status
 - Responsive, keyboard-accessible interface
 
 ## Technology
 
 - Next.js, React, and TypeScript
 - Next.js route handlers for the game API
-- Server-Sent Events for pushing state to both players
+- A streaming HTTP response for pushing state to both players
 - One in-memory server store for rooms, players, chat, and activity
 - Plain CSS for the responsive interface
 
@@ -49,12 +49,26 @@ Nothing is transmitted while a room is idle. An earlier version polled the full 
 | Messages | Time-ordered room chat |
 | Activity | Room creation, joins, moves, messages, completed rounds, and rematches |
 
+The dashboard keeps the latest 20 events per room. The server also appends the
+complete audit trail to `data/activity.jsonl`, including client connections and
+disconnections. Each line is a JSON object containing a timestamp, room code,
+event type, and short description. Chat message contents and player session IDs
+are not written to this log. The file survives server restarts and is ignored by
+Git so real player activity is not accidentally committed.
+
+Player cards show the masked public network reported by Cloudflare and the edge
+location handling that connection. This makes separate-network demonstrations
+visible without exposing either player's complete IP address.
+
+[Watch the cross-network demo](https://ampcode.com/user-content/artifacts/76d2525b481af4ad63f267ac22b8e7f21d20a81de58ec9a9519565faed3d9519-file.webm),
+showing two remote players, distinct masked networks, synchronized moves, and persistent activity.
+
 ## API
 
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/lobby` | Quick match, create a room, or join by code |
-| `GET` | `/api/rooms/:code/stream` | Server-Sent Events stream of room snapshots |
+| `POST` | `/api/rooms/:code/stream` | Event stream of room snapshots |
 | `POST` | `/api/rooms/:code/move` | Validate and apply a move |
 | `POST` | `/api/rooms/:code/message` | Add an in-room chat message |
 | `POST` | `/api/rooms/:code/rematch` | Submit a rematch vote |
@@ -74,7 +88,33 @@ npm run dev
 
 Open `http://localhost:3000` in two browser windows. Create a private room in the first window and join its code in the second, or choose Find a match in both.
 
-The game state is intentionally kept in memory and resets when the server stops. This keeps the project small and easy to explain.
+The game state is intentionally kept in memory and resets when the server stops.
+The activity audit log remains in `data/activity.jsonl`.
+
+## Run from different locations for free
+
+Run one production server on the host computer:
+
+```bash
+npm ci
+npm run build
+npm start
+```
+
+Install the free
+[Cloudflare Tunnel client](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/),
+then expose that server from a second terminal:
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+Cloudflare prints a temporary public HTTPS URL. Both players open that same URL
+from their respective locations; no Cloudflare account, paid hosting, router
+change, or port forwarding is required. Keep both commands running for the
+duration of the game. The temporary URL changes whenever the tunnel restarts.
+Crosslink uses a POST event stream because account-less Quick Tunnels buffer GET
+streams; the normal GET stream remains available for direct deployments.
 
 ## Verifying it works
 

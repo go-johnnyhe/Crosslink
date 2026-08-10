@@ -386,6 +386,10 @@ input:disabled {
   line-height: 1;
 }
 
+.player > div {
+  min-width: 0;
+}
+
 .player span {
   display: block;
   font-size: 14px;
@@ -396,7 +400,14 @@ input:disabled {
 
 .player small {
   color: var(--muted);
+  display: block;
   font-size: 10px;
+}
+
+.player .network {
+  color: var(--text);
+  margin-top: 2px;
+  white-space: nowrap;
 }
 
 /* Rows must be explicit; without them an empty row collapses shorter than one

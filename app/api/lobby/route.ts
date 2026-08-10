@@ -8,6 +8,7 @@ import {
   gameError,
   getRoom,
   joinRoom,
+  networkInfo,
 } from "@/lib/game";
 
 type LobbyRequest = {
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const player = createPlayer(name);
+    const player = createPlayer(name, networkInfo(request));
     let room;
 
     if (action === "join") {

@@ -1,7 +1,10 @@
 import {
+  addActivity,
+  broadcast,
   cleanCode,
   gameError,
   getRoom,
+  networkInfo,
   playerMark,
   roomView,
   subscribe,
@@ -12,7 +15,7 @@ type RouteContext = { params: Promise<{ code: string }> };
 // Streaming responses must never be statically optimized.
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request, context: RouteContext) {
+async function streamRoom(request: Request, context: RouteContext) {
   try {
     const { code: rawCode } = await context.params;
     const code = cleanCode(rawCode);
@@ -22,12 +25,22 @@ export async function GET(request: Request, context: RouteContext) {
     if (!room) {
       return Response.json({ error: "Room not found." }, { status: 404 });
     }
-    if (!playerMark(room, playerId)) {
+    const mark = playerMark(room, playerId);
+    if (!mark) {
       return Response.json(
         { error: "This player session is not part of the room." },
         { status: 403 },
       );
     }
+
+    const network = networkInfo(request);
+    room.players[mark]!.network = network;
+    addActivity(
+      room,
+      "client_connected",
+      `${mark} connected via ${network.address} (${network.edge})`,
+    );
+    broadcast(room);
 
     const encoder = new TextEncoder();
 
@@ -58,6 +71,8 @@ export async function GET(request: Request, context: RouteContext) {
           open = false;
           clearInterval(keepAlive);
           unsubscribe();
+          addActivity(room, "client_disconnected", `${mark} disconnected`);
+          broadcast(room);
           try {
             controller.close();
           } catch {
@@ -78,3 +93,7 @@ export async function GET(request: Request, context: RouteContext) {
     return gameError(error);
   }
 }
+
+// POST avoids response buffering on account-less Cloudflare Quick Tunnels.
+export const GET = streamRoom;
+export const POST = streamRoom;

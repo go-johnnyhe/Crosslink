@@ -17,6 +17,7 @@ type Player = {
   wins: number;
   losses: number;
   draws: number;
+  network: { address: string; edge: string };
 };
 
 type Message = {
@@ -92,37 +93,66 @@ export function GameClient() {
     }
   }, []);
 
-  // One long-lived Server-Sent Events stream per session. The server pushes a
-  // full room snapshot on connect and then only when something changes.
+  // One long-lived event stream per session. POST keeps account-less Cloudflare
+  // Quick Tunnels from buffering the stream; reconnect after a temporary drop.
   useEffect(() => {
     if (!session) return;
 
-    const stream = new EventSource(
-      `/api/rooms/${session.roomCode}/stream?player=${session.playerId}`,
-    );
+    const activeSession = session;
+    const controller = new AbortController();
     let received = false;
+    let retry: ReturnType<typeof setTimeout>;
 
-    stream.onmessage = (event) => {
-      received = true;
-      setGame(JSON.parse(event.data) as GameState);
-      setLive(true);
-    };
+    async function connect() {
+      try {
+        const response = await fetch(
+          `/api/rooms/${activeSession.roomCode}/stream?player=${activeSession.playerId}`,
+          { method: "POST", signal: controller.signal },
+        );
+        if (!response.ok || !response.body) throw new Error("Stream unavailable");
 
-    stream.onerror = () => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split("\n\n");
+          buffer = events.pop() ?? "";
+
+          for (const event of events) {
+            const data = event
+              .split("\n")
+              .find((line) => line.startsWith("data: "));
+            if (!data) continue;
+            received = true;
+            setGame(JSON.parse(data.slice(6)) as GameState);
+            setLive(true);
+          }
+        }
+      } catch {
+        if (controller.signal.aborted) return;
+      }
+
       setLive(false);
-      // Never connected means the room is gone (usually a server restart), so
-      // stop retrying and send the player back to the lobby. After a first
-      // successful message, let EventSource reconnect on its own.
       if (!received) {
-        stream.close();
         sessionStorage.removeItem(SESSION_KEY);
         setSession(null);
         setGame(null);
         setError("That room is no longer available.");
+      } else {
+        retry = setTimeout(() => void connect(), 1000);
       }
-    };
+    }
 
-    return () => stream.close();
+    void connect();
+
+    return () => {
+      clearTimeout(retry);
+      controller.abort();
+    };
   }, [session]);
 
   useEffect(() => {
@@ -345,6 +375,11 @@ export function GameClient() {
                         ? `${player.wins}W · ${player.losses}L · ${player.draws}D`
                         : "—"}
                     </small>
+                    {player && (
+                      <small className="network">
+                        Network {player.network.address} · {player.network.edge}
+                      </small>
+                    )}
                   </div>
                 </div>
               );
