@@ -60,8 +60,9 @@ Player cards show the masked public network reported by Cloudflare and the edge
 location handling that connection. This makes separate-network demonstrations
 visible without exposing either player's complete IP address.
 
-[Watch the cross-network demo](public/crosslink-network-demo.webm),
-showing two remote players, distinct masked networks, synchronized moves, and persistent activity.
+[![Cross-network demo](public/crosslink-network-demo.gif)](public/crosslink-network-demo.webm)
+
+Two remote players with distinct masked networks, synchronized moves, and persistent activity. Click for the WebM.
 
 ## API
 
