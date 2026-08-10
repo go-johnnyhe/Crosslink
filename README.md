@@ -2,6 +2,20 @@
 
 Crosslink is a browser-based multiplayer Tic-Tac-Toe networking application built for the CS5700 final project. Two players can enter the same network room, receive synchronized game state, exchange messages, track results, inspect connection activity, and request rematches.
 
+## How the code fits together
+
+Crosslink uses a small client-server design. The React frontend handles the screen, form inputs, connection status, and the latest game snapshot. It uses React's built-in state.
+
+Player actions go to Next.js route handlers as `POST` requests. The browser asks to join a room, make a move, send a message, or request a rematch. The server checks each request before it changes the game. This keeps move validation and turn order out of the browser, where either player could change them.
+
+The source of truth is the in-memory store in `lib/game.ts`. It is a `Map` keyed by the six-character room code. Each value contains one room's board, players, turn, score, chat messages, activity history, and rematch votes. Because every room has a different key, one server can run many separate games at the same time.
+
+Each player also keeps one Server-Sent Events connection open. After the server changes a room, it sends the same full room snapshot to both players. React saves that snapshot in state and renders it. The browser automatically reconnects after a temporary connection loss. If the server restarts, however, the rooms are gone because the store is not a database.
+
+![Crosslink server data model](public/architecture-class-diagram.png)
+
+The diagram is a UML-style view of the data model. The TypeScript code uses types and separate functions rather than JavaScript `class` declarations.
+
 ## Features
 
 - Automatic quick matchmaking
@@ -22,20 +36,9 @@ Crosslink is a browser-based multiplayer Tic-Tac-Toe networking application buil
 - One in-memory server store for rooms, players, chat, and activity
 - Plain CSS for the responsive interface
 
-## Architecture
+## Network behavior
 
-```mermaid
-flowchart LR
-    A["Player X browser"] -->|"POST actions"| C["Crosslink server"]
-    B["Player O browser"] -->|"POST actions"| C
-    C -->|"SSE snapshot on change"| A
-    C -->|"SSE snapshot on change"| B
-    C --> D["Shared room state"]
-```
-
-The browser never decides whether a move is legal. Each action is sent to the server as an ordinary `POST` and checked against the player identity, active turn, and current board. The server then pushes one full room snapshot to both players over their open Server-Sent Events stream.
-
-Nothing is transmitted while a room is idle. An earlier version polled the full room state every 850 ms regardless of whether anything had changed, which cost between 753 bytes and 27 KB per request per player; snapshots are now sent only on a join, move, message, or rematch. Measured end-to-end delivery from one player's click to the other player's board is about 39 ms.
+Nothing is transmitted while a room is idle. An earlier version polled the full room state every 850 ms regardless of whether anything had changed. An empty room cost 753 bytes per request, while a room with a full message history reached 27 KB. The current version sends snapshots only after a join, move, message, or rematch. Measured delivery from one player's click to the other player's board is about 39 ms.
 
 ## Server state
 
@@ -84,9 +87,10 @@ Run two browser windows side by side and confirm:
 
 `npm run lint` covers static checks.
 
-## Presentation
+## Project materials
 
-Open `presentation/index.html` in a browser to run the reveal.js deck offline (arrow keys or on-screen controls to navigate). The timed talking script is kept separately in `presentation/speaker-script.md`.
+- [Final project report](output/pdf/Crosslink-Report.pdf)
+- Open `presentation/index.html` in a browser to run the reveal.js deck offline. Use the arrow keys or on-screen controls to move through the slides. The timed talking script is in `presentation/speaker-script.md`.
 
 ## Design and security notes
 

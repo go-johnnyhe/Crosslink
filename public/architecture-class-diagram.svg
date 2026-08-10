@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1165" viewBox="0 0 1600 1165" role="img" aria-labelledby="title description">
+  <title id="title">Crosslink server data model</title>
+  <desc id="description">A UML-style class diagram showing one game store containing many rooms. Each room contains players, messages, activity entries, and rematch votes.</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#172033" flood-opacity="0.10"/>
+    </filter>
+    <style>
+      .title { font: 700 40px Inter, ui-sans-serif, system-ui, sans-serif; fill: #14213d; }
+      .subtitle { font: 400 20px Inter, ui-sans-serif, system-ui, sans-serif; fill: #5f6b7a; }
+      .box { fill: #ffffff; stroke: #cbd4df; stroke-width: 2; filter: url(#shadow); }
+      .head-store { fill: #2541b2; }
+      .head-room { fill: #087e8b; }
+      .head-child { fill: #edf2f7; }
+      .class-light { font: 700 24px Inter, ui-sans-serif, system-ui, sans-serif; fill: #ffffff; }
+      .class-dark { font: 700 22px Inter, ui-sans-serif, system-ui, sans-serif; fill: #263445; }
+      .field { font: 400 17px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #263445; }
+      .method { font: 400 17px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #087e8b; }
+      .section { stroke: #dce3eb; stroke-width: 1.5; }
+      .line { fill: none; stroke: #66758a; stroke-width: 2.5; }
+      .cardinality { font: 700 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #334155; }
+      .relation { font: 600 16px Inter, ui-sans-serif, system-ui, sans-serif; fill: #66758a; }
+      .note { fill: #f4f7fb; stroke: #dce3eb; stroke-width: 1.5; }
+      .note-text { font: 500 17px Inter, ui-sans-serif, system-ui, sans-serif; fill: #526173; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1165" fill="#f8fafc"/>
+  <text class="title" x="800" y="62" text-anchor="middle">Crosslink server data model</text>
+  <text class="subtitle" x="800" y="96" text-anchor="middle">One room-code map keeps concurrent games separate</text>
+
+  <!-- Store -->
+  <g>
+    <rect class="box" x="510" y="138" width="580" height="210" rx="12"/>
+    <path class="head-store" d="M522 138h556a12 12 0 0 1 12 12v52H510v-52a12 12 0 0 1 12-12z"/>
+    <text class="class-light" x="800" y="179" text-anchor="middle">GameStore</text>
+    <line class="section" x1="510" y1="202" x2="1090" y2="202"/>
+    <text class="field" x="540" y="238">+ rooms: Map&lt;string, Room&gt;</text>
+    <text class="field" x="540" y="269">+ nextId: number</text>
+    <line class="section" x1="510" y1="287" x2="1090" y2="287"/>
+    <text class="method" x="540" y="322">+ getRoom(code): Room</text>
+  </g>
+
+  <!-- Store to Room composition -->
+  <path class="line" d="M800 348V401"/>
+  <path d="M800 348l-11 13 11 13 11-13z" fill="#66758a"/>
+  <text class="cardinality" x="819" y="379">1</text>
+  <text class="cardinality" x="819" y="399">0..*</text>
+  <rect class="note" x="1055" y="363" width="345" height="52" rx="9"/>
+  <text class="note-text" x="1228" y="395" text-anchor="middle">Map key = six-character room code</text>
+  <path class="line" d="M1055 389H920" stroke-dasharray="7 7"/>
+
+  <!-- Room -->
+  <g>
+    <rect class="box" x="375" y="401" width="850" height="318" rx="12"/>
+    <path class="head-room" d="M387 401h826a12 12 0 0 1 12 12v52H375v-52a12 12 0 0 1 12-12z"/>
+    <text class="class-light" x="800" y="442" text-anchor="middle">Room</text>
+    <line class="section" x1="375" y1="465" x2="1225" y2="465"/>
+    <text class="field" x="405" y="502">+ code: string</text>
+    <text class="field" x="405" y="534">+ status: waiting | playing | finished</text>
+    <text class="field" x="405" y="566">+ board: Cell[9]</text>
+    <text class="field" x="405" y="598">+ currentMark: X | O</text>
+    <text class="field" x="840" y="502">+ winner: X | O | draw | null</text>
+    <text class="field" x="840" y="534">+ round: number</text>
+    <text class="field" x="840" y="566">+ createdAt: number</text>
+    <line class="section" x1="375" y1="624" x2="1225" y2="624"/>
+    <text class="method" x="405" y="662">+ joinRoom(player): boolean</text>
+    <text class="method" x="840" y="662">+ applyMove(index)</text>
+    <text class="method" x="405" y="694">+ requestRematch(mark)</text>
+  </g>
+
+  <!-- Room child relationship trunk -->
+  <path class="line" d="M800 719V775H213V818"/>
+  <path class="line" d="M800 775H602V818"/>
+  <path class="line" d="M800 775H991V818"/>
+  <path class="line" d="M800 775H1380V818"/>
+  <path d="M800 719l-11 13 11 13 11-13z" fill="#66758a"/>
+  <text class="cardinality" x="819" y="751">1</text>
+
+  <!-- Player -->
+  <g>
+    <rect class="box" x="50" y="818" width="326" height="283" rx="12"/>
+    <path class="head-child" d="M62 818h302a12 12 0 0 1 12 12v48H50v-48a12 12 0 0 1 12-12z"/>
+    <text class="class-dark" x="213" y="854" text-anchor="middle">Player</text>
+    <line class="section" x1="50" y1="878" x2="376" y2="878"/>
+    <text class="field" x="75" y="914">+ id: string</text>
+    <text class="field" x="75" y="945">+ name: string</text>
+    <text class="field" x="75" y="976">+ wins: number</text>
+    <text class="field" x="75" y="1007">+ losses: number</text>
+    <text class="field" x="75" y="1038">+ draws: number</text>
+    <text class="field" x="75" y="1069">+ games_played: number</text>
+    <text class="cardinality" x="230" y="806">1..2</text>
+  </g>
+
+  <!-- Message -->
+  <g>
+    <rect class="box" x="439" y="818" width="326" height="252" rx="12"/>
+    <path class="head-child" d="M451 818h302a12 12 0 0 1 12 12v48H439v-48a12 12 0 0 1 12-12z"/>
+    <text class="class-dark" x="602" y="854" text-anchor="middle">Message</text>
+    <line class="section" x1="439" y1="878" x2="765" y2="878"/>
+    <text class="field" x="464" y="914">+ id: number</text>
+    <text class="field" x="464" y="945">+ player_id: string</text>
+    <text class="field" x="464" y="976">+ sender_name: string</text>
+    <text class="field" x="464" y="1007">+ body: string</text>
+    <text class="field" x="464" y="1038">+ created_at: string</text>
+    <text class="cardinality" x="619" y="806">0..60</text>
+  </g>
+
+  <!-- Activity -->
+  <g>
+    <rect class="box" x="828" y="818" width="326" height="252" rx="12"/>
+    <path class="head-child" d="M840 818h302a12 12 0 0 1 12 12v48H828v-48a12 12 0 0 1 12-12z"/>
+    <text class="class-dark" x="991" y="854" text-anchor="middle">Activity</text>
+    <line class="section" x1="828" y1="878" x2="1154" y2="878"/>
+    <text class="field" x="853" y="914">+ id: number</text>
+    <text class="field" x="853" y="945">+ event_type: string</text>
+    <text class="field" x="853" y="976">+ detail: string</text>
+    <text class="field" x="853" y="1007">+ created_at: string</text>
+    <text class="cardinality" x="1008" y="806">0..20</text>
+  </g>
+
+  <!-- Rematch -->
+  <g>
+    <rect class="box" x="1217" y="818" width="326" height="176" rx="12"/>
+    <path class="head-child" d="M1229 818h302a12 12 0 0 1 12 12v48h-326v-48a12 12 0 0 1 12-12z"/>
+    <text class="class-dark" x="1380" y="854" text-anchor="middle">RematchVotes</text>
+    <line class="section" x1="1217" y1="878" x2="1543" y2="878"/>
+    <text class="field" x="1242" y="919">+ X: boolean</text>
+    <text class="field" x="1242" y="955">+ O: boolean</text>
+    <text class="cardinality" x="1397" y="806">1</text>
+  </g>
+
+  <text class="relation" x="800" y="1142" text-anchor="middle">Filled diamonds show composition: the store owns rooms, and each room owns its related records.</text>
+</svg>
