@@ -12,7 +12,7 @@ The source of truth is the in-memory store in `lib/game.ts`. It is a `Map` keyed
 
 Each player also keeps one HTTP event stream open. After the server changes a room, it sends the same full room snapshot to both players. React saves that snapshot in state and renders it. The client automatically reconnects after a temporary connection loss. If the server restarts, however, the rooms are gone because the store is not a database.
 
-![Crosslink server data model](public/architecture-class-diagram.png)
+![Crosslink server data model](public/architecture-class-diagram-basic.png)
 
 The diagram is a UML-style view of the data model. The TypeScript code uses types and separate functions rather than JavaScript `class` declarations.
 
